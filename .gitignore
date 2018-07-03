@@ -1,0 +1,7 @@
+/Debug/*
+/settings/*
+/bluetooth_health_thermometer_demo_RFS.dep
+/bluetooth_health_thermometer_demo_RFS.ewt
+/ksdk_platform_lib/Debug/*
+/ksdk_platform_lib/settings/*
+/ksdk_platform_lib/ksdk_platform_lib.dep
