@@ -63,6 +63,7 @@
 #include "device_info_interface.h"
 #include "current_time_interface.h"
 #include "health_thermometer_interface.h"
+#include "rfs.h"
 
 #include "board.h"
 #include "ApplMain.h"
@@ -124,6 +125,8 @@ static htsConfig_t htsServiceConfig = {service_health_therm,
                                        gHts_UnitInCelsius_c,
                                        &mUserData};
 static basConfig_t basServiceConfig = {service_battery, 0};
+static rfsConfig_t rfsServiceConfig = {service_ready_for_sky, 0, 0};
+
 static uint16_t cpHandles[] = { value_measure_int};
 
 /* Application specific data*/
@@ -133,6 +136,9 @@ static tmrTimerID_t mBatteryMeasurementTimerId;
 
 /* Counts number of interm temp between temp measurements */
 static uint8_t mIntermediateTempCounter = 0;
+
+// Button status
+static bool_t buttonPressed;
 
 /************************************************************************************
 *************************************************************************************
@@ -200,28 +206,34 @@ void BleApp_Start(void)
 ********************************************************************************** */
 void BleApp_HandleKeys(key_event_t events)
 {
-    switch (events)
+  switch (events)
+  {
+  case gKBD_EventPressPB1_c:
     {
-        case gKBD_EventPressPB1_c:
-        {
-            BleApp_Start();
-            break;
-        }
-        case gKBD_EventPressPB2_c:
-        {
-            Hts_SetMeasurementInterval(&htsServiceConfig, mIntTempUpdateRate_c);
-            break;
-        }
-        case gKBD_EventLongPB1_c:
-        {
-            if (mPeerDeviceId != gInvalidDeviceId_c)
-                Gap_Disconnect(mPeerDeviceId);
-            break;
-        }
-        case gKBD_EventLongPB2_c:
-        default:
-            break;
+      BleApp_Start();
+      break;
+    }   
+  case gKBD_EventLongPB1_c:
+    {
+      if (mPeerDeviceId != gInvalidDeviceId_c)
+        Gap_Disconnect(mPeerDeviceId);
+      break;
+    }  
+  case gKBD_EventHoldPB2_c:
+    {
+      buttonPressed = 1;
+      Rfs_RecordButtonValue(service_ready_for_sky, buttonPressed);
+      break;
     }
+  case gKBD_EventReleasePB2_c:
+    {
+      buttonPressed = 0;
+      Rfs_RecordButtonValue(service_ready_for_sky, buttonPressed);
+      break;
+    }
+  default:
+    break;
+  }
 }
 
 /*! *********************************************************************************
@@ -328,6 +340,8 @@ static void BleApp_Config()
     
     basServiceConfig.batteryLevel = BOARD_GetBatteryLevel();
     Bas_Start(&basServiceConfig);
+    
+    Rfs_Start(&rfsServiceConfig);
     
     /* Allocate application timers */
     mAdvTimerId = TMR_AllocateTimer();
@@ -454,6 +468,7 @@ static void BleApp_ConnectionCallback (deviceId_t peerDeviceId, gapConnectionEve
             /* Subscribe client*/
             Bas_Subscribe(peerDeviceId);        
             Hts_Subscribe(peerDeviceId);
+            Rfs_Subscribe(peerDeviceId);
 
             /* UI */
             LED_StopFlashingAllLeds();
@@ -485,7 +500,7 @@ static void BleApp_ConnectionCallback (deviceId_t peerDeviceId, gapConnectionEve
             /* Unsubscribe client */
             Bas_Unsubscribe();
             Hts_Unsubscribe();
-
+            Rfs_Unsubscribe();
             mPeerDeviceId = gInvalidDeviceId_c;
 
             if (pConnectionEvent->eventData.disconnectedEvent.reason == gHciConnectionTimeout_c)

@@ -69,7 +69,7 @@
         </option>
         <option>
           <name>RTDescription</name>
-          <state>0</state>
+          <state>Use the normal configuration of the C/C++ runtime library. No locale interface, C locale, no file descriptor support, no multibytes in printf and scanf, and no hex floats in strtod.</state>
         </option>
         <option>
           <name>OGProductVersion</name>
@@ -358,6 +358,7 @@
           <state>$_KSDK13_FWK524_PATH_$/platform/system/inc</state>
           <state>$_KSDK13_FWK524_PATH_$/platform/hal/inc</state>
           <state>$_KSDK13_FWK524_PATH_$/platform/utilities/inc</state>
+          <state>$PROJ_DIR$/main_service/</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -653,7 +654,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>generic.bin</state>
+          <state>bluetooth_health_thermometer_demo_RFS.bin</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -2111,6 +2112,15 @@
       </file>
       <file>
         <name>$PROJ_DIR$\examples\bluetooth\health_thermometer_demo\common\gatt_uuid128.h</name>
+      </file>
+    </group>
+    <group>
+      <name>main_service</name>
+      <file>
+        <name>$PROJ_DIR$\main_service\rfs.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\main_service\rfs.h</name>
       </file>
     </group>
   </group>

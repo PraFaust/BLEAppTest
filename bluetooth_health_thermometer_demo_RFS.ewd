@@ -45,7 +45,7 @@
         </option>
         <option>
           <name>MemFile</name>
-          <state></state>
+          <state>$TOOLKIT_DIR$\CONFIG\debugger\Freescale\MKW40Z160xxx4.ddf</state>
         </option>
         <option>
           <name>RunToEnable</name>
@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OCLastSavedByProductVersion</name>
-          <state>7.40.2.8567</state>
+          <state>7.50.2.10499</state>
         </option>
         <option>
           <name>OCDownloadAttachToProgram</name>
@@ -117,7 +117,7 @@
         </option>
         <option>
           <name>FlashLoadersV3</name>
-          <state>$TOOLKIT_DIR$\config\flashloader\</state>
+          <state>$TOOLKIT_DIR$\config\flashloader\Freescale\FlashKWx0xx160K.board</state>
         </option>
         <option>
           <name>OCImagesSuppressCheck1</name>
@@ -303,7 +303,7 @@
         <option>
           <name>CMSISDAPResetList</name>
           <version>1</version>
-          <state>2</state>
+          <state>1</state>
         </option>
         <option>
           <name>CMSISDAPHWResetDuration</name>
