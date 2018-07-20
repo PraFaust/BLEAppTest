@@ -1,5 +1,7 @@
 #include "rfs.h"
+#include <stdbool.h>
 
+// LED_FORMAT ledFormat;
 
 // Function prototype
 static void Rfs_SendButtonStatusNotification(uint16_t handle);
@@ -21,6 +23,11 @@ bleResult_t Rfs_Start (rfsConfig_t *pServiceConfig)
 {
   bleResult_t result;
   
+  pServiceConfig->ledData->ledState = false;
+  pServiceConfig->ledData->reserved[0] = 0x12;
+  pServiceConfig->ledData->reserved[1] = 0x34;
+  pServiceConfig->ledData->ledPos = 0x04;
+  
   mRfs_SubscribedClientId = gInvalidDeviceId_c;
   
   result = Rfs_RecordButtonValue (pServiceConfig->serviceHandle,
@@ -29,7 +36,7 @@ bleResult_t Rfs_Start (rfsConfig_t *pServiceConfig)
     return result;
   
   result = Rfs_RecordLedValue (pServiceConfig->serviceHandle,
-                               pServiceConfig->ledState);
+                               pServiceConfig->ledData);
   return result;
 }
 
@@ -72,9 +79,23 @@ bleResult_t Rfs_RecordButtonValue (uint16_t serviceHandle, uint8_t buttonState)
   return gBleSuccess_c;
 }
 
-bleResult_t Rfs_RecordLedValue (uint16_t serviceHandle, uint8_t ledState)
+bleResult_t Rfs_RecordLedValue (uint16_t serviceHandle, LED_FORMAT* ledFormat)
 {
-//
+  uint16_t handle;
+  bleResult_t result;
+                           
+  // Get handle of Led characteristic 
+  result = GattDb_FindCharValueHandleInService(serviceHandle, gBleUuidType128_c, (bleUuid_t*)&ledCharacteristicUuid128, &handle);
+    if (result != gBleSuccess_c)
+      return result;
+
+  // Update characteristic value
+  result = GattDb_WriteAttribute(handle, sizeof(ledFormat), (void*)ledFormat);
+    if (result != gBleSuccess_c)
+      return result;
+                           
+  Rfs_SendButtonStatusNotification(handle);
+                           
   return gBleSuccess_c;
 }
 
@@ -97,5 +118,17 @@ static void Rfs_SendButtonStatusNotification(uint16_t handle)
 
 static void Rfs_SendLedStatusNotification(uint16_t handle)
 {
-                             
+  uint16_t  handleCccd;
+  bool_t isNotificationActive;
+  
+  // Get handle of CCCD
+  if (GattDb_FindCccdHandleForCharValueHandle(handle, &handleCccd) != gBleSuccess_c)
+    return;
+  
+  if (gBleSuccess_c == Gap_CheckNotificationStatus
+      (mRfs_SubscribedClientId, handleCccd, &isNotificationActive) &&
+        TRUE == isNotificationActive)
+  {
+    GattServer_SendNotification(mRfs_SubscribedClientId, handle);
+  }                              
 }

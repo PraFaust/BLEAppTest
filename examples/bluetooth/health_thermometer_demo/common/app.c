@@ -125,7 +125,8 @@ static htsConfig_t htsServiceConfig = {service_health_therm,
                                        gHts_UnitInCelsius_c,
                                        &mUserData};
 static basConfig_t basServiceConfig = {service_battery, 0};
-static rfsConfig_t rfsServiceConfig = {service_ready_for_sky, 0, 0};
+static LED_FORMAT ledData;
+static rfsConfig_t rfsServiceConfig = {service_ready_for_sky, 0, &ledData};
 
 static uint16_t cpHandles[] = { value_measure_int};
 
@@ -173,8 +174,6 @@ void BleApp_Init(void)
 {
     /* Initialize application support for drivers */
     BOARD_InitAdc();
-
-
 }
 
 /*! *********************************************************************************
@@ -199,6 +198,17 @@ void BleApp_Start(void)
     BleApp_Advertise();
 }
 
+static inline void ToogleLedState(bool_t* ledState)
+{
+  if (*ledState) {
+    *ledState = false;
+    Led4Off();
+  } else {
+    *ledState = true;
+    Led4On();
+  }
+}
+
 /*! *********************************************************************************
 * \brief        Handles keyboard events.
 *
@@ -219,16 +229,20 @@ void BleApp_HandleKeys(key_event_t events)
         Gap_Disconnect(mPeerDeviceId);
       break;
     }  
-  case gKBD_EventHoldPB2_c:
+  case gKBD_EventPressPB2_c:
     {
       buttonPressed = 1;
       Rfs_RecordButtonValue(service_ready_for_sky, buttonPressed);
+      ToogleLedState(&rfsServiceConfig.ledData->ledState);
+      Rfs_RecordLedValue(service_ready_for_sky, rfsServiceConfig.ledData);
       break;
     }
   case gKBD_EventReleasePB2_c:
     {
       buttonPressed = 0;
       Rfs_RecordButtonValue(service_ready_for_sky, buttonPressed);
+      ToogleLedState(&rfsServiceConfig.ledData->ledState);
+      Rfs_RecordLedValue(service_ready_for_sky, rfsServiceConfig.ledData);
       break;
     }
   default:
@@ -340,7 +354,6 @@ static void BleApp_Config()
     
     basServiceConfig.batteryLevel = BOARD_GetBatteryLevel();
     Bas_Start(&basServiceConfig);
-    
     Rfs_Start(&rfsServiceConfig);
     
     /* Allocate application timers */
