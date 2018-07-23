@@ -8,7 +8,7 @@
 #include "gatt_server_interface.h"
 #include "gap_interface.h"
 
-typedef struct _packed
+__packed typedef struct
 {
   bool_t ledState;
   uint8_t reserved[2];
