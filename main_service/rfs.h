@@ -35,5 +35,6 @@ bleResult_t Rfs_Unsubscribe();
 bleResult_t Rfs_RecordButtonValue (uint16_t serviceHandle, uint8_t buttonState);
 bleResult_t Rfs_RecordLedValue (uint16_t serviceHandle, LED_FORMAT* ledData);
 
+bleResult_t Rfs_LedDataWriting(uint16_t serviceHandle, LED_FORMAT* ledData);
 
 #endif /* _RFS_H_ */

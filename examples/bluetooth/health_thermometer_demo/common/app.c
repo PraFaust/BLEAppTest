@@ -78,6 +78,7 @@
 #define mIntTempUpdateRate_c 1000
 
 #define mBatteryLevelReportInterval_c   (10)        /* battery level report interval in seconds  */
+#define mLedUpdateInterval (1)                   // in ms
 /************************************************************************************
 *************************************************************************************
 * Private type definitions
@@ -134,6 +135,7 @@ static uint16_t cpHandles[] = { value_measure_int};
 static tmrTimerID_t mAdvTimerId;
 static tmrTimerID_t mMeasurementTimerId;
 static tmrTimerID_t mBatteryMeasurementTimerId;
+static tmrTimerID_t mLedUpdateTimerId;
 
 /* Counts number of interm temp between temp measurements */
 static uint8_t mIntermediateTempCounter = 0;
@@ -157,6 +159,7 @@ static void BleApp_Config();
 static void AdvertisingTimerCallback (void *);
 static void TimerMeasurementCallback (void *);
 static void BatteryMeasurementTimerCallback (void *);
+static void LedUpdateTimerCallback(void *);
 
 static void BleApp_Advertise(void);
 
@@ -202,10 +205,17 @@ static inline void ToogleLedState(bool_t* ledState)
 {
   if (*ledState) {
     *ledState = false;
-    Led4Off();
   } else {
     *ledState = true;
+  }
+}
+
+static inline void UpdateLedState(bool_t ledState)
+{
+  if (ledState) {
     Led4On();
+  } else {
+    Led4Off();
   }
 }
 
@@ -504,7 +514,10 @@ static void BleApp_ConnectionCallback (deviceId_t peerDeviceId, gapConnectionEve
 			
             /* Start battery measurements */
             TMR_StartLowPowerTimer(mBatteryMeasurementTimerId, gTmrLowPowerIntervalMillisTimer_c,
-                       TmrSeconds(mBatteryLevelReportInterval_c), BatteryMeasurementTimerCallback, NULL);            
+                       TmrSeconds(mBatteryLevelReportInterval_c), BatteryMeasurementTimerCallback, NULL);
+            // Start led update timer
+            TMR_StartLowPowerTimer(mLedUpdateTimerId, gTmrLowPowerIntervalMillisTimer_c,
+                       TmrSeconds(mLedUpdateInterval), LedUpdateTimerCallback, NULL);
         }
         break;
         
@@ -738,3 +751,8 @@ static void BatteryMeasurementTimerCallback(void * pParam)
 /*! *********************************************************************************
 * @}
 ********************************************************************************** */
+static void LedUpdateTimerCallback(void * pParam)
+{
+  Rfs_LedDataWriting(service_ready_for_sky, rfsServiceConfig.ledData);
+  UpdateLedState(rfsServiceConfig.ledData->ledState);
+}

@@ -1,7 +1,7 @@
 #include "rfs.h"
 #include <stdbool.h>
 
-// LED_FORMAT ledFormat;
+#define LED_POS                 (4)
 
 // Function prototype
 static void Rfs_SendButtonStatusNotification(uint16_t handle);
@@ -26,7 +26,7 @@ bleResult_t Rfs_Start (rfsConfig_t *pServiceConfig)
   pServiceConfig->ledData->ledState = false;
   pServiceConfig->ledData->reserved[0] = 0x12;
   pServiceConfig->ledData->reserved[1] = 0x34;
-  pServiceConfig->ledData->ledPos = 0x04;
+  pServiceConfig->ledData->ledPos = LED_POS;
   
   mRfs_SubscribedClientId = gInvalidDeviceId_c;
   
@@ -95,7 +95,31 @@ bleResult_t Rfs_RecordLedValue (uint16_t serviceHandle, LED_FORMAT* ledFormat)
       return result;
                            
   Rfs_SendButtonStatusNotification(handle);
-                           
+  
+  return gBleSuccess_c;
+}
+
+bleResult_t Rfs_LedDataWriting(uint16_t serviceHandle, LED_FORMAT* ledFormat)
+{
+  uint16_t handle;
+  bleResult_t result;
+  uint16_t valueLenght;
+
+  // Get handle of Led characteristic
+  result = GattDb_FindCharValueHandleInService(serviceHandle, gBleUuidType128_c, (bleUuid_t*)&ledCharacteristicUuid128, &handle);
+    if (result != gBleSuccess_c)
+      return result;
+    
+  // Read current led status 
+  result = GattDb_ReadAttribute(handle, sizeof(ledFormat->ledState), (uint8_t*)&ledFormat->ledState, (uint16_t*)&valueLenght); 
+    if (result != gBleSuccess_c)
+      return result;
+  
+  // Write new value in database
+  Rfs_RecordLedValue(serviceHandle, ledFormat);
+    if (result != gBleSuccess_c)
+      return result;
+  
   return gBleSuccess_c;
 }
 
